@@ -1,4 +1,28 @@
-# Project
+# Matching-oriented Product Quantization For Ad-hoc Retrieval
+Repo for EMNLP 2021 paper: Matching-oriented Product Quantization For Ad-hoc Retrieval.
+
+##Introduction
+In this work, we identify the limitation of using reconstruction loss minimization in supervised PQ methods, 
+and propose MCL as the new training objective, where the model can be learned to maximize the query-key matching 
+probability to achieve the optimal retrieval accuracy. We further leverage DCS for contrastive sample argumentation, which ensures the  effective minimization of MCL.  
+
+
+##Train
+Use the following command to train on the Mind dataset. And it will automatically select the best model to test.
+```
+python run.py --mode train \
+--dataset Mind \
+--model_type MoPQ --savename MoPQ_Mind \
+--cross_device True --world_size 8 
+```
+
+##Test
+You can also start the test process manually using following command:
+```
+python run.py --mode test \
+--dataset Mind \
+--model_type MoPQ --load_ckpt_name ./model/MoPQ_Mind-best.pt 
+```
 
 > This repo has been populated by an initial template to help get you started. Please
 > make sure to update the content to build a great experience for community-building.
@@ -6,6 +30,7 @@
 As the maintainer of this project, please make a few updates:
 
 - Improving this README.MD file to provide a great experience
+
 - Updating SUPPORT.MD with content about this project's support experience
 - Understanding the security reporting process in SECURITY.MD
 - Remove this section from the README
