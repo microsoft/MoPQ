@@ -20,22 +20,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a0af2209-b66b-4329-95cc-7a5b2bf80258" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/data/Mind/test.tsv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/Mind/test_key_text.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/Mind/test_nn.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/Mind/test_query_text.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/Mind/train.tsv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/Mind/valid.tsv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dataloader.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/Differentiable_PQ.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/MoPQ.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/TextEncoder.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/parameters.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/recall.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/setup_utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -71,7 +56,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1630747530078</updated>
-      <workItem from="1630747531299" duration="16064000" />
+      <workItem from="1630747531299" duration="16368000" />
     </task>
     <servers />
   </component>

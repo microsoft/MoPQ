@@ -1,13 +1,13 @@
 # Matching-oriented Product Quantization For Ad-hoc Retrieval
 Repo for EMNLP 2021 paper: Matching-oriented Product Quantization For Ad-hoc Retrieval.
 
-##Introduction
+## Introduction
 In this work, we identify the limitation of using reconstruction loss minimization in supervised PQ methods, 
 and propose MCL as the new training objective, where the model can be learned to maximize the query-key matching 
 probability to achieve the optimal retrieval accuracy. We further leverage DCS for contrastive sample argumentation, which ensures the  effective minimization of MCL.  
 
 
-##Train
+## Train
 Use the following command to train on the Mind dataset. And it will automatically select the best model to test.
 ```
 python run.py --mode train \
@@ -16,7 +16,7 @@ python run.py --mode train \
 --cross_device True --world_size 8 
 ```
 
-##Test
+## Test
 You can also start the test process manually using following command:
 ```
 python run.py --mode test \
