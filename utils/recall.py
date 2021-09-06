@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from setup_utils import *
+from utils.setup_utils import *
 import json
 from typing import Any, Callable, Dict, List, Tuple
 from tqdm import tqdm

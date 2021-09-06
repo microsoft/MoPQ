@@ -22,7 +22,7 @@ from transformers.utils import logging
 from tqdm import tqdm
 from random import shuffle
 
-from utils import setuplogging
+from utils.utils import setuplogging
 
 logger = logging.get_logger(__name__)
 

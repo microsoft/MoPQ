@@ -15,8 +15,8 @@ import torch.multiprocessing as mp
 import torch.distributed as dist
 
 from parameters import parse_args
-from setup_utils import (cleanup, setup_worker, setup_loader, setup_manager, setup_model)
-from utils import (compute_retrive_acc, dump_args,
+from utils.setup_utils import (cleanup, setup_worker, setup_loader, setup_manager, setup_model)
+from utils.utils import (compute_retrive_acc, dump_args,
                     get_barrier, save_model, setuplogging)
 
 from test import test_single_process, test, test_recall

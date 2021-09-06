@@ -6,9 +6,9 @@ import time
 from argparse import Namespace
 import torch
 
-from setup_utils import (setup_loader, setup_model)
-from utils import (compute_retrive_acc)
-from recall import recall_by_dtable, encode
+from utils.setup_utils import (setup_loader, setup_model)
+from utils.utils import (compute_retrive_acc)
+from utils.recall import recall_by_dtable, encode
 
 def test_single_process(model: torch.nn.Module,
                         args: Namespace,
