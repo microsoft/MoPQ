@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument("--model_dir", type=str, default='./model')  # path to save
     parser.add_argument("--enable_gpu", type=str2bool, default=True)
 
-    parser.add_argument("--query_max_token", type=int, default=50)
+    parser.add_argument("--query_max_token", type=int, default=32)
     parser.add_argument("--key_max_token", type=int, default=50)
 
     parser.add_argument("--savename", type=str, default='model')

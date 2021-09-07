@@ -35,6 +35,8 @@ def main():
     Path(args.model_dir).mkdir(parents=True, exist_ok=True)
 
     if 'train' in args.mode:
+        if args.cross_device: assert args.world_size>1
+
         mgr, end, end_train = setup_manager()
         mp.spawn(train,
                  args=(args, end, end_train),

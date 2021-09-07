@@ -10,18 +10,24 @@ probability to achieve the optimal retrieval accuracy. We further leverage DCS f
 ## Train
 Use the following command to train on the Mind dataset. And it will automatically select the best model to test.
 ```
-python run.py --mode train \
---dataset Mind \
---model_type MoPQ --savename MoPQ_Mind \
---cross_device True --world_size 8 
+python run.py 
+  --mode train \
+  --dataset Mind \
+  --model_type MoPQ \
+  --savename MoPQ_Mind \
+  --cross_device True \
+  --world_size {the number of your GPUs}
 ```
+If you use more than one GPU, `--cross_device` should be True to activate the Differentiable Cross-device in-batch Sampling.
 
 ## Test
 You can also start the test process manually using following command:
 ```
-python run.py --mode test \
---dataset Mind \
---model_type MoPQ --load_ckpt_name ./model/MoPQ_Mind-best.pt 
+python run.py \
+  --mode test \
+  --dataset Mind \
+  --model_type MoPQ \
+  --load_ckpt_name ./model/MoPQ_Mind-best.pt 
 ```
 
 ## Contributing
