@@ -14,21 +14,37 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 def generate_batch(texts, tokenizer, batch_size, max_l):
     tokens = []
     attention_mask = []
+    vecs = []
     for i in range(len(texts)):
         content = texts[str(i)]
-        temp = tokenizer(content, max_length=max_l, pad_to_max_length=True, truncation=True, add_special_tokens=False)
-        tokens.append(temp['input_ids'])
-        # print(temp['input_ids'])
-        attention_mask.append(temp['attention_mask'])
-        if len(tokens)==batch_size:
+        if isinstance(content, str):
+            temp = tokenizer(content, max_length=max_l, pad_to_max_length=True, truncation=True, add_special_tokens=False)
+            tokens.append(temp['input_ids'])
+            attention_mask.append(temp['attention_mask'])
+        else:
+            vecs.append(content)
+        if len(tokens)==batch_size or len(vecs)==batch_size:
+            if len(vecs) == 0:
+                tokens = torch.LongTensor(tokens).cuda()
+                attention_mask = torch.FloatTensor(attention_mask).cuda()
+                vecs = None
+            else:
+                tokens = None
+                attention_mask = None
+                vecs = torch.FloatTensor(vecs).cuda()
+            yield tokens,attention_mask, vecs
+            tokens = []; attention_mask = []; vecs = []
+    if len(tokens)>0 or len(vecs)>0:
+        if len(vecs) == 0:
             tokens = torch.LongTensor(tokens).cuda()
             attention_mask = torch.FloatTensor(attention_mask).cuda()
-            yield tokens,attention_mask
-            tokens = []; attention_mask=[]
-    if len(tokens)>0:
-        tokens = torch.LongTensor(tokens).cuda()
-        attention_mask = torch.FloatTensor(attention_mask).cuda()
-        yield tokens, attention_mask
+            vecs = None
+        else:
+            tokens = None
+            attention_mask = None
+            vecs = torch.FloatTensor(vecs).cuda()
+        yield tokens, attention_mask, vecs
+        tokens = []; attention_mask = []; vecs = []
 
 
 def encode(args, model=None, mode='test', model_type='MoPQ'):
@@ -37,8 +53,8 @@ def encode(args, model=None, mode='test', model_type='MoPQ'):
     model = model.to(device)
     model.eval()
 
-    query_file = './data/{}/{}_query_text.json'.format(args.dataset, mode)
-    key_file = './data/{}/{}_key_text.json'.format(args.dataset, mode)
+    query_file = './data/{}/{}_queries.json'.format(args.dataset, mode)
+    key_file = './data/{}/{}_keys.json'.format(args.dataset, mode)
 
     key_codes = []
     query_dtable = []
@@ -49,8 +65,8 @@ def encode(args, model=None, mode='test', model_type='MoPQ'):
         # stime = time.time()
         for data in tqdm(generate_batch(query, tokenizer, batch_size=batch_size, max_l=args.query_max_token),
                          total=(len(query) // batch_size)):
-            input, mask = data
-            dtable = model.encode(input, mask, mode=mode)
+            input, mask, vecs = data
+            dtable = model.encode(input=input, mask=mask, vecs=vecs, mode=mode)
             dtable = dtable.detach().cpu().numpy()
             query_dtable.extend(dtable)
         # encode_time = time.time() - stime
@@ -61,7 +77,7 @@ def encode(args, model=None, mode='test', model_type='MoPQ'):
                          total=(len(key) // batch_size)):
             input,mask = data
             start_time = time.time()
-            codes = model.encode(input, mask, mode='hard')
+            codes = model.encode(input=input, mask=mask, vecs=vecs, mode='hard')
 
             codes = codes.detach().cpu().numpy()
             key_codes.extend(codes)

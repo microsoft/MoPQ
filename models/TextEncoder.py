@@ -36,7 +36,7 @@ class TextEncoder(nn.Module):
 
     def infer_q(
             self,
-            input_id_query,attention_mask_query):
+            input_id_query, attention_mask_query):
         outputs_query = self.bert(
             input_id_query,
             attention_mask=attention_mask_query,
@@ -63,11 +63,6 @@ class TextEncoder(nn.Module):
             input_id_key, attention_mask_key):
         q = self.infer_q(input_id_query, attention_mask_query)
         k = self.infer_k(input_id_key, attention_mask_key)
-
-        if self.cross_device:
-            q = self.gather_tensor(q)
-            k = self.gather_tensor(k)
-
         return self.retrieve_loss(q, k)
 
 

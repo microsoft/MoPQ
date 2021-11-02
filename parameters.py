@@ -36,7 +36,7 @@ def parse_args():
     parser.add_argument("--save_steps", type=int, default=3000)
     parser.add_argument("--log_steps", type=int, default=10)
 
-    parser.add_argument("--model_type", default="retrive", type=str)
+    parser.add_argument("--model_type", default="MoPQ", choices=['MoPQ', 'TextEncoder', 'DPQ', 'SPQ', 'DQN', 'DVSQ'],  type=str, required=True)
     parser.add_argument("--bert_model", default="bert-base-uncased", type=str)
     parser.add_argument(
         "--load_ckpt_name",
@@ -44,6 +44,8 @@ def parse_args():
         default = 'model/savename-epoch-1.pt',
         help="choose which ckpt to load and test"
     )
+    parser.add_argument("--ckpt_for_infer", default="bert-base-uncased", type=str)
+
 
     # lr schedule
     parser.add_argument("--lr", type=float, default=0.001)
@@ -68,11 +70,16 @@ def parse_args():
     parser.add_argument("--augment_method", type=str, default='all',choices=['drop','delete','add','all'])
     parser.add_argument("--cross_device", type=str2bool, default=True)
 
+    parser.add_argument("--input_query_vec", type=str2bool, default=False)
+    parser.add_argument("--input_key_vec", type=str2bool, default=False)
+
     parser.add_argument("--quantization_loss", type=str,
         nargs='+',
-        default=None,
+        default=['l2'],
         choices=['dot', 'subdot', 'l2'])
-    parser.add_argument("--quantization_loss_weight", type=float, default=1e-3)
+    parser.add_argument("--quantization_loss_weight", type=float, default=1e-8)
+
+
 
     args = parser.parse_args()
     logging.info(args)

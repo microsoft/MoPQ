@@ -29,85 +29,15 @@ logger = logging.get_logger(__name__)
 
 class DatasetForMatching(IterableDataset):
     def __init__(self,
-                 tokenizer: BertTokenizerFast,
-                 file_path: str,
-                 overwrite_cache=False,
-                 tokenizing_batch_size=65536):
-        directory, filename = os.path.split(file_path)
-        cached_features_file = os.path.join(
-            directory,
-            "cached_{}_{}".format(
-                tokenizer.__class__.__name__,
-                filename,
-            ),
-        )
-        setuplogging()
-        # Make sure only the first process in distributed training processes the dataset,
-        # and the others will use the cache.
-        lock_path = cached_features_file + ".lock"
-        # Input file format:
-        # One query and one key per line, split by '\t'.
-        with FileLock(lock_path):
-            if os.path.exists(cached_features_file +
-                              ".finish") and not overwrite_cache:
-                self.data_file = open(cached_features_file,
-                                      "r",
-                                      encoding="utf-8")
-            else:
-                logger.info(
-                    f"Creating features from dataset file at {directory}")
-                batch_query, batch_key = [], []
-                with open(file_path, encoding="utf-8") as f, open(
-                        cached_features_file, "w", encoding="utf-8") as fout:
-                    for lineNum, line in tqdm(enumerate(f)):
-                        line = line.strip()
-                        if not line: continue
-                        try:
-                            query_and_nn, key_and_nn = line.strip('\n').split(
-                                '\t')
-                        except ValueError:
-                            logger.error("line {}: {}".format(
-                                lineNum, line.replace("\t", "|")))
-                            continue
-                        batch_query.append(query_and_nn.strip())
-                        batch_key.append(key_and_nn.strip())
+                 file_path: str):
+        self.data_file = open(file_path,
+                              "r",
+                              encoding="utf-8")
 
-                        if len(batch_query) >= tokenizing_batch_size:
-                            tokenized_result_query = tokenizer.batch_encode_plus(
-                                batch_query, add_special_tokens=False)
-                            tokenized_result_key = tokenizer.batch_encode_plus(
-                                batch_key, add_special_tokens=False)
-                            for j, (tokens_query, tokens_key) in enumerate(
-                                    zip(tokenized_result_query['input_ids'],
-                                        tokenized_result_key['input_ids'])):
-                                fout.write(json.dumps([tokens_query, tokens_key]) + '\n')
-                            batch_query, batch_key = [], []
-
-                    if len(batch_query) > 0:
-                        tokenized_result_query = tokenizer.batch_encode_plus(
-                            batch_query, add_special_tokens=False)
-                        tokenized_result_key = tokenizer.batch_encode_plus(
-                            batch_key, add_special_tokens=False)
-                        for j, (tokens_query, tokens_key) in enumerate(
-                                zip(tokenized_result_query['input_ids'],
-                                    tokenized_result_key['input_ids'])):
-                            fout.write(json.dumps([tokens_query, tokens_key]) + '\n')
-                        batch_query, batch_key = [], []
-
-                    logger.info(f"Finish creating")
-                with open(cached_features_file + ".finish",
-                          "w",
-                          encoding="utf-8"):
-                    pass
-                self.data_file = open(cached_features_file,
-                                      "r",
-                                      encoding="utf-8")
-            # os.remove(cached_features_file + ".finish")
     def __iter__(self):
         for line in self.data_file:
-            tokens_title = json.loads(line)
-            yield tokens_title
-
+            tokens_and_vecs = json.loads(line)
+            yield tokens_and_vecs
 
 
 # @dataclass
@@ -119,36 +49,65 @@ class DataCollatorForMatching:
 
     def __call__(
             self,
-            samples: List[List[List[int]]]) -> Dict[str, torch.Tensor]:
+            samples: List[Dict]) -> Dict[str, torch.Tensor]:
         input_id_queries = []
         attention_mask_queries = []
         input_id_keys = []
         attention_mask_keys = []
+        queries_vec = []
+        keys_vec = []
         for i, sample in (enumerate(samples)):
             (input_id_query,
              attention_mask_query,
              input_id_key,
-             attention_mask_key) = self.create_training_sample(sample)
+             attention_mask_key,
+             query_vec,
+             key_vec) = self.create_training_sample(sample)
 
-            input_id_queries.append(input_id_query)
-            attention_mask_queries.append(attention_mask_query)
-            input_id_keys.append(input_id_key)
-            attention_mask_keys.append(attention_mask_key)
+            if input_id_query is not None:
+                input_id_queries.append(input_id_query)
+                attention_mask_queries.append(attention_mask_query)
+            else:
+                queries_vec.append(query_vec)
 
+            if input_id_key is not None:
+                input_id_keys.append(input_id_key)
+                attention_mask_keys.append(attention_mask_key)
+            else:
+                keys_vec.append(key_vec)
 
-        input_id_queries = self._tensorize_batch(
-            input_id_queries, self.tokenizer.pad_token_id)
-        input_id_keys = self._tensorize_batch(input_id_keys,
-                                              self.tokenizer.pad_token_id)
+        if len(queries_vec) == 0:
+            input_id_queries = self._tensorize_batch(
+                input_id_queries, self.tokenizer.pad_token_id)
+            attention_mask_queries = self._tensorize_batch(attention_mask_queries, 0)
+            queries_vec = None
+        else:
+            # print(queries_vec)
+            queries_vec = torch.FloatTensor(queries_vec)
+            input_id_queries, attention_mask_queries = None, None
+
+        if len(keys_vec) == 0:
+            input_id_keys = self._tensorize_batch(input_id_keys,
+                                                  self.tokenizer.pad_token_id)
+            attention_mask_keys = self._tensorize_batch(attention_mask_keys, 0)
+            keys_vec = None
+        else:
+            keys_vec = torch.FloatTensor(keys_vec)
+            input_id_keys, attention_mask_keys = None, None
+
         return {
             "input_id_query":
             input_id_queries,
-            "attention_masks_query":
-            self._tensorize_batch(attention_mask_queries, 0),
+            "attention_mask_query":
+            attention_mask_queries,
             "input_id_key":
             input_id_keys,
-            "attention_masks_key":
-            self._tensorize_batch(attention_mask_keys, 0)
+            "attention_mask_key":
+            attention_mask_keys,
+            "queries_vec":
+            queries_vec,
+            "keys_vec":
+            keys_vec
         }
 
     def _tensorize_batch(self, examples: List[torch.Tensor],
@@ -163,50 +122,63 @@ class DataCollatorForMatching:
                                 batch_first=True,
                                 padding_value=padding_value)
 
-    def create_training_sample(self, sample: List[List[int]]):
+    def create_training_sample(self, sample: Dict):
         """Turn sample into train pair
 
         Args:
-            sample (List[List[int]]): [query_seq_id, key_seq_id]
+            sample (Dict): {"query_tokens":List[int], "query_vec":List[float], "key_tokens":List[int], "key_vec":List[float]}
 
-        Returns:
-            input_id_queries: query_seq_id wth CLS END
         """
-
-        max_query_token = self.args.query_max_token
-        max_key_token = self.args.key_max_token
-
-        token_queries, token_keys = sample
-
+        input_id_queries, attention_mask_queries, input_id_keys, attention_mask_keys, query_vec, key_vec = None, None, None, None, None, None
         if self.args.self_supervised:
-            if len(token_keys) > 1:
-                if self.args.augment_method == 'drop':
-                    token_queries = self.drop_tokens(token_keys)
-                elif self.args.augment_method == 'replace':
-                    token_queries = self.replace_tokens(token_keys)
-                elif self.args.augment_method == 'add':
+            assert 'key_tokens' in sample
+            input_id_keys, attention_mask_keys = self.creat_tokens_sample(sample['key_tokens'], self.args.key_max_token)
+            token_queries = self.creat_query_from_key(sample['key_tokens'])
+            input_id_queries, attention_mask_queries = self.creat_tokens_sample(token_queries, self.args.query_max_token)
+            return input_id_queries, attention_mask_queries, input_id_keys, attention_mask_keys, query_vec, key_vec
+
+        if 'query_tokens' in sample:
+            input_id_queries, attention_mask_queries = self.creat_tokens_sample(sample['query_tokens'],
+                                                                                self.args.query_max_token)
+        else:
+            query_vec = self.creat_vecs_sample(sample['query_vec'])
+
+        if 'key_tokens' in sample:
+            input_id_keys, attention_mask_keys = self.creat_tokens_sample(sample['key_tokens'],
+                                                                                self.args.query_max_token)
+        else:
+            key_vec = self.creat_vecs_sample(sample['key_vec'])
+
+        return input_id_queries, attention_mask_queries, input_id_keys, attention_mask_keys, query_vec, key_vec
+
+    def creat_query_from_key(self, token_keys):
+        if len(token_keys) > 1:
+            if self.args.augment_method == 'drop':
+                token_queries = self.drop_tokens(token_keys)
+            elif self.args.augment_method == 'replace':
+                token_queries = self.replace_tokens(token_keys)
+            elif self.args.augment_method == 'add':
+                token_queries = self.add_tokens(token_keys)
+            elif self.args.augment_method == 'all':
+                rand = random.random()
+                if rand < 0.33:
                     token_queries = self.add_tokens(token_keys)
-                elif self.args.augment_method == 'all':
-                    rand = random.random()
-                    if rand < 0.33:
-                        token_queries = self.add_tokens(token_keys)
-                    elif rand < 0.66:
-                        token_queries = self.replace_tokens(token_keys)
-                    else:
-                        token_queries = self.drop_tokens(token_keys)
+                elif rand < 0.66:
+                    token_queries = self.replace_tokens(token_keys)
+                else:
+                    token_queries = self.drop_tokens(token_keys)
+        return token_queries
 
-
-        input_id_queries = torch.tensor(
+    def creat_tokens_sample(self, tokens_list, max_tokens_num):
+        input_ids= torch.tensor(
                     self.tokenizer.build_inputs_with_special_tokens(
-                        token_queries[:max_query_token]))
-        input_id_keys    = torch.tensor(
-                    self.tokenizer.build_inputs_with_special_tokens(
-                        token_keys[:max_key_token]))
+                        tokens_list[:max_tokens_num]))
+        attention_mask = torch.tensor([1] * len(input_ids))
+        return input_ids, attention_mask
 
-        attention_mask_queries = torch.tensor([1] * len(input_id_queries))
-        attention_mask_keys = torch.tensor([1] * len(input_id_keys))
 
-        return input_id_queries, attention_mask_queries, input_id_keys, attention_mask_keys
+    def creat_vecs_sample(self, vector):
+        return vector
 
 
     def drop_tokens(self, input_ids):

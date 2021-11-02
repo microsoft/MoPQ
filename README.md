@@ -6,11 +6,47 @@ In this work, we identify the limitation of using reconstruction loss minimizati
 and propose MCL as the new training objective, where the model can be learned to maximize the query-key matching 
 probability to achieve the optimal retrieval accuracy. We further leverage DCS for contrastive sample argumentation, which ensures the  effective minimization of MCL.  
 
+## Dataset Format
+
+File Name | Description | Format
+------------- | ------------- | --------------
+train.tsv/valid.tsv/test.tsv  | pairs of query and key | two columns and splited by "\t"
+test_keys.josn  | keys' text and its id | {k_id : "key_text"}
+test_queries.json  | queries' text and its id | {q_id : "query_text"}
+test_ann.json  | queries' positive neighbors | {q_id : [k_id, ...]}
+
+
+## Preprocess
+- **Jointly optimize the codebook and embeddings**  
+Here are the command to for tokenization:
+```
+python preprocess.py --dataset Mind 
+```
+This command will create two files: `./data/MIND/preprocessed_train.tsv` and `./data/MIND/preprocessed_valid.tsv`, where each line is the tokenization results of query and key:
+```
+{"query_tokens":List[int], "key_tokens":List[int]}
+{"query_tokens":List[int], "key_tokens":List[int]}
+...
+```
+
+- **Optimize the codebooks based on the fixed embeddings**  
+If you want to trian the MoPQ based on the existing embeddings, you can generate the preprocessed files in the following format:
+```
+{"query_vec":List[float], "key_vec":List[float]}
+{"query_vec":List[float], "key_vec":List[float]}
+...
+```
+If you only want to fix queries' embeddings, you can storage the "query_vec" and "key_tokens" in the preprocessed files.  
+You also need to provide the embeddings of queries/keys for testdata, i.e., `test_queries.json`/`test_keys.json`
+```
+{"id":List[float], ...}
+```
+
 
 ## Train
 Use the following command to train on the Mind dataset. And it will automatically select the best model to test.
 ```
-python run.py 
+python run.py \
   --mode train \
   --dataset Mind \
   --model_type MoPQ \

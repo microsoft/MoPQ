@@ -15,7 +15,7 @@ from transformers import BertTokenizerFast
 from models.MoPQ import MoPQ
 from models.TextEncoder import TextEncoder
 from models.Differentiable_PQ import DPQ
-from transformers import AutoConfig, AutoModel
+from transformers import AutoConfig, AutoModel, AutoTokenizer
 
 def setup_worker(rank, world_size):
     # initialize the process group
@@ -51,12 +51,11 @@ def setup_loader(args,
                   'test': args.test_batch_size}[mode]
 
     if tokenizer is None:
-        tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
+        tokenizer = AutoTokenizer.from_pretrained(args.bert_model)
 
     data_collator = DataCollatorForMatching(tokenizer=tokenizer,
                                             args=args)
-    dataset = DatasetForMatching(tokenizer=tokenizer,
-                                 file_path=datapath)
+    dataset = DatasetForMatching(file_path=datapath)
 
     if multi_process:
         dataloader = MultiProcessDataLoaderForMatching(
@@ -82,12 +81,14 @@ def setup_manager():
     return mgr, end, end_train
 
 
-def setup_model(args, local_rank):
+def setup_model(args, model_type, local_rank=-1):
     config = AutoConfig.from_pretrained(args.bert_model)
     config.num_hidden_layers = args.layers
     bert = AutoModel.from_pretrained(args.bert_model, config=config)
-    if args.model_type == 'MoPQ':
+    if model_type == 'MoPQ':
         model = MoPQ(args, bert, key_bert=None, hidden_size=config.hidden_size, local_rank=local_rank)
+    elif model_type == 'TextEncoder':
+        model = TextEncoder(bert, key_bert=None, hidden_size=config.hidden_size, output_hidden_size=args.output_hidden_size)
     else:
-        model = DPQ(args, bert, key_bert=None, hidden_size=config.hidden_size, local_rank=local_rank)
+        model = DPQ(args, bert, key_bert=None, hidden_size=config.hidden_size)
     return model

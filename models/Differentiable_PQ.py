@@ -148,14 +148,14 @@ class DPQ(TextEncoder):
             loss = loss + self.quantization_loss_weight*torch.mean(torch.sum((k-hard_k)**2,dim=-1))
         return loss
 
-    def encode(self, input, mask, mode='hard'):
+    def encode(self, input=None, mask=None, mode='hard', vecs=None):
         if mode == 'hard':
-            vecs = self.infer_k(input, mask)
+            if vecs is None: vecs = self.infer_k(input, mask)
             prob = self.select_codeword(vecs)
             codes = prob.max(dim=-1, keepdim=True)[1].squeeze(-1)
             return codes
         else:
-            vecs = self.infer_q(input, mask)
+            if vecs is None: vecs = self.infer_q(input, mask)
             if mode == 'soft': # This mode is used by SPQ
                 prob = self.select_codeword(vecs)
                 vecs = self.soft_vecs(prob)

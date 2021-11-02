@@ -29,20 +29,24 @@ def test_single_process(model: torch.nn.Module,
                     for k, v in batch.items() if v is not None
                 }
 
-            input_id_query = batch['input_id_query']
-            attention_masks_query = batch['attention_masks_query']
-            input_id_key = batch['input_id_key']
-            attention_masks_key = batch['attention_masks_key']
+            if 'queries_vec' not in batch:
+                input_id_query = batch['input_id_query']
+                attention_masks_query = batch['attention_masks_query']
+                q = model.infer_q(
+                    input_id_query, attention_masks_query)
+            else: q = batch['queries_vec']
 
-            q = model.infer_q(
-                 input_id_query, attention_masks_query)
-            k = model.infer_k(
-                 input_id_key, attention_masks_key)
+            if 'keys_vec' not in batch:
+                input_id_key = batch['input_id_key']
+                attention_masks_key = batch['attention_masks_key']
+                k = model.infer_k(
+                     input_id_key, attention_masks_key)
+            else: k = batch['keys_vec']
 
             if model_type == 'spq':
                 _, q, _ = model.get_soft_and_hard(q)
                 _, _, k = model.get_soft_and_hard(k)
-            elif model_type == 'encoder':
+            elif model_type == 'TextEncoder':
                 pass
             else:
                 k = model.quant(k)
@@ -60,7 +64,9 @@ def test_recall(model: torch.nn.Module,
                 args: Namespace,
                 mode:str ='test',
                 model_type: str ='MoPQ'):
-
+    if model_type == 'TextEncoder':
+        logging.info('PQ not used in this model. You cannot use the PQ to do ANN search!')
+        raise
     nn_file = './data/{}/{}_nn.json'.format(args.dataset, mode)
     topk = [1, 5, 10, 50, 100, 500]
 
@@ -79,7 +85,7 @@ def test_recall(model: torch.nn.Module,
 
 def test(args):
     device = torch.device("cuda")
-    model = setup_model(args, local_rank=-1)
+    model = setup_model(args, args.model_type, local_rank=-1)
     model = model.to(device)
 
     checkpoint = torch.load(args.load_ckpt_name, map_location="cpu")

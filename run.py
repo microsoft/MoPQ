@@ -27,9 +27,9 @@ def main():
     os.environ['MASTER_PORT'] = '12355'
     args = parse_args()
 
-    args.train_data_path = './data/{}/train.tsv'.format(args.dataset)
-    args.valid_data_path = './data/{}/valid.tsv'.format(args.dataset)
-    args.test_data_path = './data/{}/test.tsv'.format(args.dataset)
+    args.train_data_path = './data/{}/preprocessed_train.tsv'.format(args.dataset)
+    args.valid_data_path = './data/{}/preprocessed_valid.tsv'.format(args.dataset)
+    args.test_data_path = './data/{}/preprocessed_test.tsv'.format(args.dataset)
     dump_args(args)
 
     Path(args.model_dir).mkdir(parents=True, exist_ok=True)
@@ -67,10 +67,10 @@ def train(local_rank:int,
                               local_rank)
         barrier = get_barrier(args)
 
-        model = setup_model(args, local_rank)
+        model = setup_model(args, args.model_type,  local_rank)
         model = model.to(device)
 
-        #if use self-superived methods for unlabeled data, please load a pretrained TextEncoder and freeze it during training
+        # if use self-superived methods for unlabeled data, please load a pretrained TextEncoder and freeze it during training
         if args.load:
             checkpoint = torch.load(args.load_ckpt_name, map_location="cpu")
             model.load_state_dict(checkpoint['model_state_dict'],strict=False)
@@ -116,19 +116,14 @@ def train(local_rank:int,
                                       blocking=False)
 
             ddp_model.train()
-            for step, batch in enumerate(dataloader):
+            for step, batch_data in enumerate(dataloader):
                 if args.enable_gpu:
-                    batch = {
+                    batch_data = {
                         k: v.cuda(non_blocking=True)
-                        for k, v in batch.items() if v is not None
+                        for k, v in batch_data.items() if v is not None
                     }
-                input_id_query = batch['input_id_query']
-                attention_masks_query = batch['attention_masks_query']
-                input_id_key = batch['input_id_key']
-                attention_masks_key = batch['attention_masks_key']
 
-                batch_loss = ddp_model(input_id_query, attention_masks_query,
-                                       input_id_key, attention_masks_key)
+                batch_loss = ddp_model(**batch_data)
 
                 loss += batch_loss.item()
                 optimizer.zero_grad()
