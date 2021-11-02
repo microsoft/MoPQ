@@ -31,14 +31,14 @@ def test_single_process(model: torch.nn.Module,
 
             if 'queries_vec' not in batch:
                 input_id_query = batch['input_id_query']
-                attention_masks_query = batch['attention_masks_query']
+                attention_masks_query = batch['attention_mask_query']
                 q = model.infer_q(
                     input_id_query, attention_masks_query)
             else: q = batch['queries_vec']
 
             if 'keys_vec' not in batch:
                 input_id_key = batch['input_id_key']
-                attention_masks_key = batch['attention_masks_key']
+                attention_masks_key = batch['attention_mask_key']
                 k = model.infer_k(
                      input_id_key, attention_masks_key)
             else: k = batch['keys_vec']

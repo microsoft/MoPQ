@@ -20,7 +20,7 @@ test_ann.json  | queries' positive neighbors | {q_id : [k_id, ...]}
 - **Jointly optimize the codebook and embeddings**  
 Here are the command to for tokenization:
 ```
-python preprocess.py --dataset Mind 
+python preprocess.py --dataset Mind  --bert_model bert-base-uncased
 ```
 This command will create two files: `./data/MIND/preprocessed_train.tsv` and `./data/MIND/preprocessed_valid.tsv`, where each line is the tokenization results of query and key:
 ```
@@ -30,41 +30,43 @@ This command will create two files: `./data/MIND/preprocessed_train.tsv` and `./
 ```
 
 - **Optimize the codebooks based on the fixed embeddings**  
-If you want to trian the MoPQ based on the existing embeddings, you can generate the preprocessed files in the following format:
+If you want to trian the MoPQ based on the existing embeddings, you should generate the preprocessed files in the following format:
 ```
 {"query_vec":List[float], "key_vec":List[float]}
 {"query_vec":List[float], "key_vec":List[float]}
 ...
 ```
-If you only want to fix queries' embeddings, you can storage the "query_vec" and "key_tokens" in the preprocessed files.  
-You also need to provide the embeddings of queries/keys for testdata, i.e., `test_queries.json`/`test_keys.json`
+You also can storage the "query_vec" and "key_tokens" in the preprocessed files to only fix queries' embeddings. 
+Besides, you need to provide the embeddings of queries/keys for testdata, i.e., `test_queries.json`/`test_keys.json`
 ```
 {"id":List[float], ...}
 ```
-
+You can download the Mind_with_emb dataset from [here](https://microsoft-my.sharepoint.com/:f:/p/t-shxiao/EvQgMhZCoHdIp3PNSOF6re4BpNfxCxVJ3MappYxwpCN3RA?e=w2bh6J).
 
 ## Train
-Use the following command to train on the Mind dataset. And it will automatically select the best model to test.
+Use the following command to train MoPQ. And it will automatically select the best model to test.
 ```
 python run.py \
   --mode train \
   --dataset Mind \
-  --model_type MoPQ \
+  --bert_model bert-base-uncased \
+  --model_type {dataset: Mind or Mind_with_emb} \
   --savename MoPQ_Mind \
   --cross_device True \
   --world_size {the number of your GPUs}
 ```
-If you use more than one GPU, `--cross_device` should be True to activate the Differentiable Cross-device in-batch Sampling.
-
+If you use more than one GPU, `--cross_device` should be True to activate the Differentiable Cross-device in-batch Sampling.  
+  
 ## Test
 You can also start the test process manually using following command:
 ```
 python run.py \
   --mode test \
-  --dataset Mind \
+  --dataset {dataset: Mind or Mind_with_emb} \
   --model_type MoPQ \
   --load_ckpt_name ./model/MoPQ_Mind-best.pt 
 ```
+
 
 ## Contributing
 

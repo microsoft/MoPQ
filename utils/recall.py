@@ -69,20 +69,17 @@ def encode(args, model=None, mode='test', model_type='MoPQ'):
             dtable = model.encode(input=input, mask=mask, vecs=vecs, mode=mode)
             dtable = dtable.detach().cpu().numpy()
             query_dtable.extend(dtable)
-        # encode_time = time.time() - stime
 
         key = json.load(open(key_file))
         encode_time = 0
         for data in tqdm(generate_batch(key,tokenizer,batch_size=batch_size,max_l=args.key_max_token),
                          total=(len(key) // batch_size)):
-            input,mask = data
+            input, mask, vecs = data
             start_time = time.time()
             codes = model.encode(input=input, mask=mask, vecs=vecs, mode='hard')
-
             codes = codes.detach().cpu().numpy()
             key_codes.extend(codes)
             encode_time += time.time() - start_time
-
     return key_codes, query_dtable, encode_time
 
 

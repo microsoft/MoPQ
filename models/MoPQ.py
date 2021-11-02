@@ -45,6 +45,9 @@ class MoPQ(DPQ):
         return q,k,hard_k
 
     def gather_tensor(self, vecs):
+        '''
+        broadcast vectors among all devices
+        '''
         all_tensors = [torch.empty_like(vecs) for _ in range(self.world_size)]
         dist.all_gather(all_tensors, vecs)
         all_tensors[self.local_rank] = vecs

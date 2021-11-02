@@ -2,9 +2,8 @@ import os
 import logging
 import json
 import torch
-import numpy as np
 from tqdm import tqdm
-from transformers import AutoConfig, AutoModel, AutoTokenizer
+from transformers import AutoTokenizer
 from utils.setup_utils import setup_model
 from parameters import parse_args
 from utils.utils import setuplogging
@@ -25,7 +24,7 @@ def preprocess(args, tokenizing_batch_size=2048):
         )
 
         model_for_infer = None
-        if args.input_query_vec or args.input_key_veec:
+        if args.input_query_vec or args.input_key_vec:
             model_for_infer = setup_model(args, model_type='TextEncoder')
             model_for_infer.load_state_dict(torch.load(args.ckpt_for_infer)['model_state_dict'])
             model_for_infer.cuda()

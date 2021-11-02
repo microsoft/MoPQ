@@ -36,7 +36,7 @@ def parse_args():
     parser.add_argument("--save_steps", type=int, default=3000)
     parser.add_argument("--log_steps", type=int, default=10)
 
-    parser.add_argument("--model_type", default="MoPQ", choices=['MoPQ', 'TextEncoder', 'DPQ', 'SPQ', 'DQN', 'DVSQ'],  type=str, required=True)
+    parser.add_argument("--model_type", default="MoPQ", choices=['MoPQ', 'TextEncoder', 'DPQ', 'SPQ', 'DQN', 'DVSQ'],  type=str)
     parser.add_argument("--bert_model", default="bert-base-uncased", type=str)
     parser.add_argument(
         "--load_ckpt_name",

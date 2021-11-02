@@ -12,7 +12,6 @@ import torch
 import torch.optim as optim
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.multiprocessing as mp
-import torch.distributed as dist
 
 from parameters import parse_args
 from utils.setup_utils import (cleanup, setup_worker, setup_loader, setup_manager, setup_model)

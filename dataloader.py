@@ -78,8 +78,8 @@ class DataCollatorForMatching:
 
         if len(queries_vec) == 0:
             input_id_queries = self._tensorize_batch(
-                input_id_queries, self.tokenizer.pad_token_id)
-            attention_mask_queries = self._tensorize_batch(attention_mask_queries, 0)
+                input_id_queries, self.tokenizer.pad_token_id).long()
+            attention_mask_queries = self._tensorize_batch(attention_mask_queries, 0).float()
             queries_vec = None
         else:
             # print(queries_vec)
@@ -88,8 +88,8 @@ class DataCollatorForMatching:
 
         if len(keys_vec) == 0:
             input_id_keys = self._tensorize_batch(input_id_keys,
-                                                  self.tokenizer.pad_token_id)
-            attention_mask_keys = self._tensorize_batch(attention_mask_keys, 0)
+                                                  self.tokenizer.pad_token_id).long()
+            attention_mask_keys = self._tensorize_batch(attention_mask_keys, 0).float()
             keys_vec = None
         else:
             keys_vec = torch.FloatTensor(keys_vec)
