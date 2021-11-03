@@ -41,7 +41,7 @@ Besides, you need to provide the embeddings of queries/keys for testdata, i.e., 
 ```
 {"id":List[float], ...}
 ```
-You can download the Mind_with_emb dataset from [here](https://microsoft-my.sharepoint.com/:f:/p/t-shxiao/EvQgMhZCoHdIp3PNSOF6re4BpNfxCxVJ3MappYxwpCN3RA?e=w2bh6J).
+You can download the Mind_with_emb dataset from [here](https://microsoft-my.sharepoint.com/:f:/p/t-shxiao/Eq6352Kvvu1BtMAuSMKMIvwBBFkrWEdqFa6HA1RKN6zp8w?e=m6tP24).
 
 ## Train
 Use the following command to train MoPQ. And it will automatically select the best model to test.
