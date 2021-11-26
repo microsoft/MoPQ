@@ -48,14 +48,25 @@ Use the following command to train MoPQ. And it will automatically select the be
 ```
 python run.py \
   --mode train \
-  --dataset Mind \
+  --dataset {dataset: Mind or Mind_with_emb} \
   --bert_model bert-base-uncased \
-  --model_type {dataset: Mind or Mind_with_emb} \
+  --model_type MoPQ \
   --savename MoPQ_Mind \
   --cross_device True \
   --world_size {the number of your GPUs}
 ```
-If you use more than one GPU, `--cross_device` should be True to activate the Differentiable Cross-device in-batch Sampling.  
+If use more than one GPU, `--cross_device` should be True to activate the Differentiable Cross-device in-batch Sampling.  
+You can change the `model_type` to `TextEncoder` to train the encoder without PQ module:
+```
+python run.py \
+  --mode train \
+  --dataset Mind \
+  --bert_model bert-base-uncased \
+  --model_type TextEncoder \
+  --savename MoPQ_Mind \
+  --cross_device True \
+  --world_size {the number of your GPUs}
+```
   
 ## Test
 You can also start the test process manually using following command:
